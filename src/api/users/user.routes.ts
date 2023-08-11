@@ -1,4 +1,4 @@
-import {insertUserSchemaWithInviteCode} from './user.schema';
+import {insertUserSchemaWithInviteCode, updateUserSchema} from './user.schema';
 import {Router} from 'express';
 import * as handlers from './user.handlers';
 import { validationHandler } from '../../middlewares';
@@ -18,7 +18,10 @@ router.post('/login', validationHandler({
 
 router.get('/details', handlers.userDetailsHandler)
 
-// todo -> edit user details 
 router.post('/invite', handlers.newInviteCodeHandler)
+
+router.put('/edit', validationHandler({
+    body: updateUserSchema
+}), handlers.updateUserHandler)
 
 export default router;  

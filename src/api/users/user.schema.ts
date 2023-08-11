@@ -80,3 +80,10 @@ export interface insertUserSchema extends baseInsertUserSchema {
 export interface insertInviteSchema {
     createdBy: User
 }
+
+export const updateUserSchema = z.object({
+    email: z.string().email(),
+    fullName: z.string()
+})
+
+export type updateUserSchema = z.infer<typeof updateUserSchema>

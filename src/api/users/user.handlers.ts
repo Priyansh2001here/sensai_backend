@@ -3,7 +3,13 @@ import * as userService from './user.service';
 import MessageResponse from '../../interfaces/MessageResponse';
 import {UserList, UserLogin, UserLoginResponse} from '../../interfaces/UsersResponse';
 import {ParamsWithId} from '../../interfaces/paramsWithId';
-import { insertUserSchemaWithInviteCode, insertUserSchema, selectUserSchema, baseInsertUserSchema} from './user.schema';
+import {
+    insertUserSchemaWithInviteCode,
+    insertUserSchema,
+    selectUserSchema,
+    baseInsertUserSchema,
+    updateUserSchema
+} from './user.schema';
 import { NewInvite } from '../../interfaces/NewInviteResponse';
 
 
@@ -119,5 +125,20 @@ export const newInviteCodeHandler = async (req: Request, res: Response<NewInvite
 
     return res.json({
         inviteCode: inviteCode
+    })
+}
+
+export const updateUserHandler = async (req: Request<{}, MessageResponse, updateUserSchema>, res: Response<MessageResponse>, next: NextFunction) => {
+
+    if (!req.user){
+        return res.status(401).json({
+            message: "Invalid Action"
+        })
+    }
+
+    const userObj = req.user;
+    await userService.updateUser(req.body, userObj.id);
+    return res.json({
+        message: 'user details updated successfully'
     })
 }

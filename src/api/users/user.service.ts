@@ -1,9 +1,16 @@
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken';
 import { promisify } from 'util';
-import  AppDataSource from '../../db';
-import { Invite, User, baseInsertUserSchema, insertInviteSchema, insertUserSchema } from './user.schema';
-import crypto, { UUID } from 'crypto'
-import {SECRET_KEY} from '../../../'
+import AppDataSource from '../../db';
+import {
+    Invite,
+    User,
+    baseInsertUserSchema,
+    insertInviteSchema,
+    insertUserSchema,
+    updateUserSchema
+} from './user.schema';
+import crypto from 'crypto'
+import { SECRET_KEY } from '../../../'
 import { UserLoginResponse } from '../../interfaces/UsersResponse';
 import { JWTSign } from '../../interfaces/JwtSign';
 const userRepository = AppDataSource.getRepository(User);
@@ -11,7 +18,7 @@ const inviteRepository = AppDataSource.getRepository(Invite);
 
 
 export const findById = async (id: number) => {
-    
+
     return await userRepository.findOneBy({
         id: id
     });
@@ -25,12 +32,12 @@ export const isAdmin = async (id: number) => {
 export const deleteById = async (id: number) => {
 
     const result = await userRepository
-    .createQueryBuilder()
-    .delete()
-    .from(User)
-    .where("id = :id", {id: id})
-    .andWhere("isAdmin = false")
-    .execute()
+        .createQueryBuilder()
+        .delete()
+        .from(User)
+        .where("id = :id", { id: id })
+        .andWhere("isAdmin = false")
+        .execute()
 
     if (result.affected && result.affected > 0) {
         return true; // User was deleted
@@ -39,14 +46,14 @@ export const deleteById = async (id: number) => {
 
 }
 
-const findByEmail = async (email: string): Promise<User|null> => {
+const findByEmail = async (email: string): Promise<User | null> => {
     return await userRepository.findOneBy({
         email: email
     })
 }
 
 const expireInvite = async (inviteObj: Invite) => {
-    
+
     inviteObj.isUsed = true;
     await inviteRepository.save(inviteObj);
     return true;
@@ -57,10 +64,10 @@ export const addUser = async (user: baseInsertUserSchema, inviteObj: Invite) => 
     const obj = await findByEmail(user.email);
     const invitedBy = inviteObj.createdBy
 
-    if (obj !== null){
+    if (obj !== null) {
         return false;
     }
-    
+
     user.password = await makePassword(user.password);
 
     const newUser: insertUserSchema = {
@@ -82,8 +89,8 @@ export const getAllUsers = async () => {
 
 const makePassword = async (password: string, salt?: string) => {
 
-    const hasher = async (password: string, salt? : string) => {
-        
+    const hasher = async (password: string, salt?: string) => {
+
         const generateSalt = async (length = 16) => crypto.randomBytes(length).toString('base64');
 
         // PBKDF2
@@ -101,7 +108,7 @@ const makePassword = async (password: string, salt?: string) => {
 const decodePassword = async (encodedPassword: string) => encodedPassword.split("$");
 
 const constTimeCompare = async (pass1: string, pass2: string) => {
-    
+
     if (pass2.length !== pass1.length) {
         return false;
     }
@@ -114,8 +121,8 @@ const constTimeCompare = async (pass1: string, pass2: string) => {
 };
 
 
-const verifyCredentials = async (email: string, password: string): Promise<User|null> => {
-    
+const verifyCredentials = async (email: string, password: string): Promise<User | null> => {
+
     const user = await findByEmail(email);
 
     if (user === null) {
@@ -127,30 +134,30 @@ const verifyCredentials = async (email: string, password: string): Promise<User|
 
     const encoded = await makePassword(password, salt);
 
-    const passMatched =  await constTimeCompare(encoded, encodedUserPassword);
+    const passMatched = await constTimeCompare(encoded, encodedUserPassword);
 
-    if (!passMatched){
+    if (!passMatched) {
         return null;
     }
 
     return user;
 }
 
-export const login = async (email: string, password: string): Promise<UserLoginResponse|null> => {
-    
+export const login = async (email: string, password: string): Promise<UserLoginResponse | null> => {
+
     const userIns = await verifyCredentials(email, password);
 
     if (userIns === null) {
         return null;
     }
-    
+
     const jwtPayload: JWTSign = {
-        id: userIns.id.toString(), 
-        isAdmin: userIns.isAdmin 
+        id: userIns.id.toString(),
+        isAdmin: userIns.isAdmin
     }
 
-    const token = jwt.sign(jwtPayload, SECRET_KEY);   
-    
+    const token = jwt.sign(jwtPayload, SECRET_KEY);
+
     return {
         token: token,
         email: userIns.email,
@@ -161,10 +168,12 @@ export const login = async (email: string, password: string): Promise<UserLoginR
 
 }
 
-export const findInviteByuid = async (uid: string, active=true): Promise<Invite|null> => {
-    return await inviteRepository.findOne({where:{id: uid, isUsed: false}, relations: {
-        createdBy: true
-    }});
+export const findInviteByuid = async (uid: string, active = true): Promise<Invite | null> => {
+    return await inviteRepository.findOne({
+        where: { id: uid, isUsed: false }, relations: {
+            createdBy: true
+        }
+    });
 }
 
 export const genNewInviteCode = async (userObj: User): Promise<string> => {
@@ -177,4 +186,20 @@ export const genNewInviteCode = async (userObj: User): Promise<string> => {
     const primaryKey = res.id;
 
     return primaryKey;
+}
+
+export const updateUser = async (updateData: updateUserSchema, userId: number) => {
+
+    const result = await userRepository
+        .createQueryBuilder()
+        .update(User)
+        .set({ ...updateData })
+        .where("id = :id", { id: userId })
+        .execute()
+
+    if (result.affected && result.affected > 0) {
+        return true; // User was updated
+    }
+    return false; // No user was updated
+
 }
