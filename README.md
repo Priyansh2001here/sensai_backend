@@ -1,59 +1,22 @@
-# Express API Starter with Typescript
+Backend service for Sens AI assignment. 
+Server can be started using docker which has configuration for postgres database and backend service.
 
-How to use this template:
-
-```sh
-npx create-express-api --typescript --directory my-api-name
+commands 
+```
+docker compose build
 ```
 
-Includes API Server utilities:
-
-* [morgan](https://www.npmjs.com/package/morgan)
-  * HTTP request logger middleware for node.js
-* [helmet](https://www.npmjs.com/package/helmet)
-  * Helmet helps you secure your Express apps by setting various HTTP headers. It's not a silver bullet, but it can help!
-* [dotenv](https://www.npmjs.com/package/dotenv)
-  * Dotenv is a zero-dependency module that loads environment variables from a `.env` file into `process.env`
-* [cors](https://www.npmjs.com/package/cors)
-  * CORS is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options.
-
-Development utilities:
-
-* [typescript](https://www.npmjs.com/package/typescript)
-  * TypeScript is a language for application-scale JavaScript.
-* [ts-node](https://www.npmjs.com/package/ts-node)
-  * TypeScript execution and REPL for node.js, with source map and native ESM support.
-* [nodemon](https://www.npmjs.com/package/nodemon)
-  * nodemon is a tool that helps develop node.js based applications by automatically restarting the node application when file changes in the directory are detected.
-* [eslint](https://www.npmjs.com/package/eslint)
-  * ESLint is a tool for identifying and reporting on patterns found in ECMAScript/JavaScript code.
-* [typescript-eslint](https://typescript-eslint.io/)
-  * Tooling which enables ESLint to support TypeScript.
-* [jest](https://www.npmjs.com/package/jest)
-  * Jest is a delightful JavaScript Testing Framework with a focus on simplicity.
-* [supertest](https://www.npmjs.com/package/supertest)
-  * HTTP assertions made easy via superagent.
-
-## Setup
+this will add required dependendencies and copy code files to docker.
 
 ```
-npm install
+docker compose up
 ```
 
-## Lint
+this command will pull database and start the server which is accessible on http://localhost:5000/
+Database configuration can be modified by altering .env.docker file.
 
-```
-npm run lint
-```
+Since it will initialize an empty database and this is an invite only platform, firstly you will manually need to add admin by creating an entry to users table. 
 
-## Test
+In docker compose conf. port 5432 for postgres is exposed. Since passwords are stored in encrypted format,  password can be generated through getEncpass.js file using command  ```node getEncpass.js ```. This will generate encrypted password for raw passwod passed to ```makePassword``` function. User then can login through email and password.
 
-```
-npm run test
-```
 
-## Development
-
-```
-npm run dev
-```
